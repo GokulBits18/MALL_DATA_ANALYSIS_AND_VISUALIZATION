@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="bi bi-speedometer2"></i> Customer Analytics Dashboard</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Analyzing {{ stats.total_customers }} customers from the mall dataset.
+                    <a href="{{ url_for('upload_file') }}" class="btn btn-sm btn-outline-light ms-3">
+                        <i class="bi bi-upload"></i> Upload New Data
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Key Metrics -->
+    <div class="col-md-3 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-people"></i> Gender Distribution</h5>
+            </div>
+            <div class="card-body text-center">
+                {% if 'gender_dist' in plots %}
+                    <img src="data:image/png;base64,{{ plots.gender_dist }}" class="img-fluid" alt="Gender Distribution">
+                    <table class="table table-sm mt-3">
+                        <tr>
+                            <th>Male</th>
+                            <td>{{ stats.gender_dist.get('Male', 0) }}</td>
+                        </tr>
+                        <tr>
+                            <th>Female</th>
+                            <td>{{ stats.gender_dist.get('Female', 0) }}</td>
+                        </tr>
+                    </table>
+                {% else %}
+                    <div class="alert alert-warning">{{ plots.gender_dist_error }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-cash-stack"></i> Income Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-column">
+                    <div class="mb-2">
+                        <span class="fw-bold">Average:</span> ${{ stats.income_stats.mean }}k
+                    </div>
+                    <div class="mb-2">
+                        <span class="fw-bold">Median:</span> ${{ stats.income_stats.median }}k
+                    </div>
+                    <div class="mb-2">
+                        <span class="fw-bold">Range:</span> ${{ stats.income_stats.min }}k - ${{ stats.income_stats.max }}k
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="bi bi-graph-up"></i> Spending Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-column">
+                    <div class="mb-2">
+                        <span class="fw-bold">Average:</span> {{ stats.spending_stats.mean }}/100
+                    </div>
+                    <div class="mb-2">
+                        <span class="fw-bold">Median:</span> {{ stats.spending_stats.median }}/100
+                    </div>
+                    <div class="mb-2">
+                        <span class="fw-bold">Range:</span> {{ stats.spending_stats.min }} - {{ stats.spending_stats.max }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-person"></i> Age Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-column">
+                    <div class="mb-2">
+                        <span class="fw-bold">Average:</span> {{ stats.age_stats.mean }} years
+                    </div>
+                    <div class="mb-2">
+                        <span class="fw-bold">Median:</span> {{ stats.age_stats.median }} years
+                    </div>
+                    <div class="mb-2">
+                        <span class="fw-bold">Range:</span> {{ stats.age_stats.min }} - {{ stats.age_stats.max }} years
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Age Distribution</h5>
+            </div>
+            <div class="card-body">
+                {% if 'age_dist' in plots %}
+                    <img src="data:image/png;base64,{{ plots.age_dist }}" class="img-fluid" alt="Age Distribution">
+                {% else %}
+                    <div class="alert alert-warning">{{ plots.age_dist_error }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-scatter-chart"></i> Income vs Spending</h5>
+            </div>
+            <div class="card-body">
+                {% if 'income_spending' in plots %}
+                    <img src="data:image/png;base64,{{ plots.income_spending }}" class="img-fluid" alt="Income vs Spending">
+                {% else %}
+                    <div class="alert alert-warning">{{ plots.income_spending_error }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-heatmap"></i> Correlation Matrix</h5>
+            </div>
+            <div class="card-body">
+                {% if 'correlation' in plots %}
+                    <img src="data:image/png;base64,{{ plots.correlation }}" class="img-fluid" alt="Correlation Heatmap">
+                {% else %}
+                    <div class="alert alert-warning">{{ plots.correlation_error }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-box-plot"></i> Spending by Age Group</h5>
+            </div>
+            <div class="card-body">
+                {% if 'spending_age' in plots %}
+                    <img src="data:image/png;base64,{{ plots.spending_age }}" class="img-fluid" alt="Spending by Age Group">
+                {% else %}
+                    <div class="alert alert-warning">{{ plots.spending_age_error }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-table"></i> Sample Data (First 10 Records)</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Gender</th>
+                                <th>Age</th>
+                                <th>Income ($k)</th>
+                                <th>Spending Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in data %}
+                            <tr>
+                                <td>{{ row['CustomerID'] }}</td>
+                                <td>{{ row['Gender'] }}</td>
+                                <td>{{ row['Age'] }}</td>
+                                <td>{{ row['Annual Income (k$)'] }}</td>
+                                <td>{{ row['Spending Score (1-100)'] }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

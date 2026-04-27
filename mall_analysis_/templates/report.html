@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="bi bi-file-earmark-text"></i> Comprehensive Customer Analysis Report</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle"></i> Analysis completed successfully.
+                    {% if filename %}
+                    <span class="fw-bold">File analyzed: {{ filename }}</span>
+                    <a href="{{ url_for('download_file', filename=filename) }}" class="btn btn-sm btn-outline-light ms-3">
+                        <i class="bi bi-download"></i> Download Original
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Statistics -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-clipboard-data"></i> Summary Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <div class="display-4 text-primary">{{ stats.total_customers }}</div>
+                        <p class="text-muted">Total Customers</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="display-4 text-success">{{ stats.gender_dist.get('Female', 0) }}</div>
+                        <p class="text-muted">Female Customers</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="display-4 text-danger">{{ stats.gender_dist.get('Male', 0) }}</div>
+                        <p class="text-muted">Male Customers</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="display-4 text-warning">{{ stats.age_stats.mean }}</div>
+                        <p class="text-muted">Average Age</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Visualizations -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-graph-up"></i> Age Distribution</h5>
+            </div>
+            <div class="card-body">
+                {% if 'age_dist' in plots %}
+                    <img src="data:image/png;base64,{{ plots.age_dist }}" class="img-fluid" alt="Age Distribution">
+                {% else %}
+                    <div class="alert alert-warning">{{ plots.age_dist_error }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-currency-dollar"></i> Income vs Spending</h5>
+            </div>
+            <div class="card-body">
+                {% if 'income_spending' in plots %}
+                    <img src="data:image/png;base64,{{ plots.income_spending }}" class="img-fluid" alt="Income vs Spending">
+                {% else %}
+                    <div class="alert alert-warning">{{ plots.income_spending_error }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cluster Analysis -->
+{% if elbow_plot and cluster_plot %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-diagram-3"></i> Customer Segmentation Analysis</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0">Elbow Method for Optimal Clusters</h6>
+                            </div>
+                            <div class="card-body">
+                                <img src="data:image/png;base64,{{ elbow_plot }}" class="img-fluid" alt="Elbow Method">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0">Customer Segments (K={{ stats.clusters.optimal_k }})</h6>
+                            </div>
+                            <div class="card-body">
+                                <img src="data:image/png;base64,{{ cluster_plot }}" class="img-fluid" alt="Customer Segments">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <h6>Cluster Sizes:</h6>
+                    <div class="row">
+                        {% for cluster, size in stats.clusters.cluster_sizes.items() %}
+                        <div class="col-md-2 mb-2">
+                            <div class="card text-center">
+                                <div class="card-header bg-secondary text-white">
+                                    Cluster {{ cluster + 1 }}
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ size }}</h5>
+                                    <p class="card-text">customers</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% elif cluster_error %}
+<div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle"></i> Cluster analysis could not be performed: {{ cluster_error }}
+</div>
+{% endif %}
+
+<!-- Additional Visualizations -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-heatmap"></i> Correlation Matrix</h5>
+            </div>
+            <div class="card-body">
+                {% if 'correlation' in plots %}
+                    <img src="data:image/png;base64,{{ plots.correlation }}" class="img-fluid" alt="Correlation Heatmap">
+                {% else %}
+                    <div class="alert alert-warning">{{ plots.correlation_error }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-box-plot"></i> Spending by Age Group</h5>
+            </div>
+            <div class="card-body">
+                {% if 'spending_age' in plots %}
+                    <img src="data:image/png;base64,{{ plots.spending_age }}" class="img-fluid" alt="Spending by Age Group">
+                {% else %}
+                    <div class="alert alert-warning">{{ plots.spending_age_error }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Data Sample -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-table"></i> Data Sample (First 10 Records)</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Gender</th>
+                                <th>Age</th>
+                                <th>Income ($k)</th>
+                                <th>Spending Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in data %}
+                            <tr>
+                                <td>{{ row['CustomerID'] }}</td>
+                                <td>{{ row['Gender'] }}</td>
+                                <td>{{ row['Age'] }}</td>
+                                <td>{{ row['Annual Income (k$)'] }}</td>
+                                <td>{{ row['Spending Score (1-100)'] }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recommendations -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Marketing Recommendations</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card mb-3 h-100">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0">High Income, High Spending</h6>
+                            </div>
+                            <div class="card-body">
+                                <p>Target premium products and loyalty programs to customers with both high income and high spending scores.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card mb-3 h-100">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0">High Income, Low Spending</h6>
+                            </div>
+                            <div class="card-body">
+                                <p>Focus on converting these customers with personalized offers and premium experiences.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card mb-3 h-100">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0">Young Customers</h6>
+                            </div>
+                            <div class="card-body">
+                                <p>Engage with trendy, social media-friendly campaigns as this demographic is highly active online.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

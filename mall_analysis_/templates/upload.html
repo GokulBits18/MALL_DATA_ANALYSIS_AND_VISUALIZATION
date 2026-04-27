@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-lg">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0"><i class="bi bi-cloud-arrow-up"></i> Upload Customer Data</h3>
+            </div>
+            <div class="card-body">
+                {% if error %}
+                <div class="alert alert-danger">{{ error }}</div>
+                {% endif %}
+                
+                <form method="POST" enctype="multipart/form-data" action="{{ url_for('upload_file') }}">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Select CSV File</label>
+                        <input class="form-control" type="file" id="file" name="file" accept=".csv" required>
+                        <div class="form-text">Please upload a CSV file with customer data</div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-upload"></i> Upload & Analyze
+                        </button>
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Dashboard
+                        </a>
+                    </div>
+                </form>
+                
+                <hr>
+                
+                <div class="alert alert-info">
+                    <h5><i class="bi bi-info-circle"></i> Expected CSV Format</h5>
+                    <p>Your CSV file should contain the following columns (or similar):</p>
+                    <ul>
+                        <li>CustomerID</li>
+                        <li>Gender (Male/Female)</li>
+                        <li>Age</li>
+                        <li>Annual Income (k$)</li>
+                        <li>Spending Score (1-100)</li>
+                    </ul>
+                    <p>The application will automatically detect and analyze your data.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
